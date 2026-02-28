@@ -6,7 +6,7 @@ variable "labelPrefix" {
 variable "region" {
   description = "Azure region to deploy resources into."
   type        = string
-  default     = "canadacentral"
+  default     = "southafricanorth"
 }
 
 variable "admin_username" {
