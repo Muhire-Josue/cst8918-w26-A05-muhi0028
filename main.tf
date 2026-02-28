@@ -110,3 +110,41 @@ data "cloudinit_config" "web_init" {
     content      = file("${path.module}/init.sh")
   }
 }
+
+resource "azurerm_linux_virtual_machine" "vm" {
+  name                = "${var.labelPrefix}-A05-VM"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  size                = "Standard_B1s"
+
+  admin_username                  = var.admin_username
+  disable_password_authentication = true
+
+  network_interface_ids = [
+    azurerm_network_interface.nic.id
+  ]
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = file(pathexpand(var.ssh_public_key_path))
+  }
+
+  # Run init.sh via cloud-init
+  custom_data = data.cloudinit_config.web_init.rendered
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts"
+    version   = "latest"
+  }
+
+  depends_on = [
+    azurerm_network_interface_security_group_association.nic_nsg
+  ]
+}
